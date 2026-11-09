@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محاكي جرعات فيتامين د السريري</title>
+    <!-- استدعاء خطوط Google (Cairo) لخط عربي عصري واحترافي -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- استدعاء Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Cairo', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        },
+                        emerald: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            600: '#059669',
+                            700: '#047857',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .fade-in {
+            animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* شريط القياس المتدرج */
+        .gauge-gradient {
+            background: linear-gradient(to left, #ef4444 0%, #ef4444 20%, #f59e0b 20%, #f59e0b 35%, #10b981 35%, #10b981 80%, #7c3aed 80%, #7c3aed 100%);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col font-sans">
+
+    <!-- Header / رأس الصفحة -->
+    <header class="bg-gradient-to-l from-brand-900 via-brand-800 to-emerald-800 text-white shadow-md border-b border-brand-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center gap-3.5">
+                <div class="bg-white/15 backdrop-blur-sm p-2.5 rounded-2xl text-brand-100 border border-white/20 shadow-inner">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white">محاكي جرعات فيتامين D السريري المطور</h1>
+                    <p class="text-xs sm:text-sm text-brand-100 font-medium">حاسبة تفاعلية لتشخيص النقص وحساب جرعات العجز والصيانة (من عمر يوم واحد حتى كبار السن)</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 self-start sm:self-auto bg-white/10 px-3.5 py-2 rounded-xl border border-white/15 text-xs font-semibold text-brand-50">
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>وفق توصيات Endocrine Society & AAP</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- العمود الأيمن: المدخلات السريرية (7 أعمدة) -->
+            <div class="lg:col-span-7 space-y-6">
+                
+                <!-- القسم 1: العمر والفئة العمرية (من عمر يوم واحد فيما فوق) -->
+                <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-extrabold text-slate-800 flex items-center gap-2.5">
+                            <span class="bg-brand-600 text-white w-7 h-7 rounded-lg flex items-center justify-center text-sm shadow-sm">1</span>
+                            تحديد العمر والفئة السريرية
+                        </h2>
+                        <span id="ageCategoryBadge" class="text-xs font-bold px-3 py-1 rounded-full bg-brand-50 text-brand-700 border border-brand-200">
+                            رضيع (أقل من سنة)
+                        </span>
+                    </div>
+
+                    <!-- أزرار الاختيار السريع للفئات العمرية -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-5">
+                        <button type="button" onclick="selectAgePreset('infant')" id="preset-infant" class="age-preset-btn rounded-xl border-2 p-2.5 text-center transition-all">
+                            <div class="font-bold text-sm">رضيع / حديث ولادة</div>
+                            <div class="text-[11px] opacity-75 mt-0.5">يوم - 12 شهراً</div>
+                        </button>
+                        <button type="button" onclick="selectAgePreset('child')" id="preset-child" class="age-preset-btn rounded-xl border-2 p-2.5 text-center transition-all">
+                            <div class="font-bold text-sm">طفل / مراهق</div>
+                            <div class="text-[11px] opacity-75 mt-0.5">1 - 18 سنة</div>
+                        </button>
+                        <button type="button" onclick="selectAgePreset('adult')" id="preset-adult" class="age-preset-btn rounded-xl border-2 p-2.5 text-center transition-all">
+                            <div class="font-bold text-sm">بالغ</div>
+                            <div class="text-[11px] opacity-75 mt-0.5">18 - 65 سنة</div>
+                        </button>
+                        <button type="button" onclick="selectAgePreset('elderly')" id="preset-elderly" class="age-preset-btn rounded-xl border-2 p-2.5 text-center transition-all">
+                            <div class="font-bold text-sm">كبار السن</div>
+                            <div class="text-[11px] opacity-75 mt-0.5">فوق 65 سنة</div>
+                        </button>
+                    </div>
+
+                    <!-- إدخال العمر الدقيق (يوم / شهر / سنة) -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <label for="ageValue" class="text-sm font-bold text-slate-700">
+                            أدخل العمر الدقيق (يبدأ من يوم واحد):
+                        </label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="ageValue" min="1" max="120" value="30" oninput="handleCustomAgeInput()"
+                                class="w-28 rounded-xl border-2 border-slate-300 bg-white px-3.5 py-2 text-center font-extrabold text-slate-900 text-lg focus:border-brand-600 focus:outline-none">
+                            <select id="ageUnit" onchange="handleCustomAgeInput()"
+                                class="rounded-xl border-2 border-slate-300 bg-white px-4 py-2 font-bold text-slate-800 text-base focus:border-brand-600 focus:outline-none cursor-pointer">
+                                <option value="days">يوم</option>
+                                <option value="months">شهر</option>
+                                <option value="years" selected>سنة</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- القسم 2: نسبة تحليل فيتامين د 25(OH)D والتشخيص التلقائي -->
+                <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                        <h2 class="text-lg font-extrabold text-slate-800 flex items-center gap-2.5">
+                            <span class="bg-brand-600 text-white w-7 h-7 rounded-lg flex items-center justify-center text-sm shadow-sm">2</span>
+                            نتيجة تحليل فيتامين د 25(OH)D
+                        </h2>
+                        <!-- خيار التبديل: يوجد تحليل أم وقاية مباشرة -->
+                        <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200 self-start">
+                            <button type="button" id="modeLabBtn" onclick="setLabMode('lab')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-brand-700 shadow-sm">
+                                يوجد تحليل معملي
+                            </button>
+                            <button type="button" id="modePrevBtn" onclick="setLabMode('prevention')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900">
+                                بدون تحليل (وقاية مباشرة)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- حاوية إدخال التحليل والمقياس البصري -->
+                    <div id="labInputContainer" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <div class="sm:col-span-5">
+                                <label for="labValue" class="block text-xs font-bold text-slate-600 mb-1">قيمة التحليل الرقمية:</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" id="labValue" min="1" max="500" step="0.5" value="14" oninput="calculateDose()"
+                                        class="w-full rounded-xl border-2 border-brand-500 bg-white px-3 py-2 text-center font-extrabold text-xl text-slate-900 focus:outline-none">
+                                    <select id="labUnit" onchange="handleLabUnitChange()"
+                                        class="rounded-xl border-2 border-slate-300 bg-white px-2.5 py-2 font-bold text-sm text-slate-800 focus:border-brand-600 focus:outline-none">
+                                        <option value="ng">ng/mL</option>
+                                        <option value="nmol">nmol/L</option>
+                                    </select>
+                                </div>
+                                <div id="convertedUnitText" class="text-[11px] font-semibold text-slate-500 mt-1.5">
+                                    يعادل: 35.0 nmol/L
+                                </div>
+                            </div>
+
+                            <!-- بطاقة التشخيص التلقائي الفوري -->
+                            <div class="sm:col-span-7">
+                                <div id="autoDiagnosisCard" class="rounded-xl p-3.5 border-2 transition-all">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-bold opacity-80">التشخيص التلقائي والقرار:</span>
+                                        <span id="protocolDecisionBadge" class="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full"></span>
+                                    </div>
+                                    <div id="diagnosisStatusTitle" class="text-base font-extrabold mt-1"></div>
+                                    <div id="diagnosisStatusSub" class="text-xs font-semibold mt-0.5 opacity-90"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- المقياس البصري التفاعلي (Visual Gauge Bar) -->
+                        <div class="pt-2 px-1">
+                            <div class="flex justify-between text-[11px] font-bold text-slate-600 mb-1.5">
+                                <span class="text-red-600">نقص (&lt;20)</span>
+                                <span class="text-amber-600">عدم كفاية (20-29)</span>
+                                <span class="text-emerald-600">طبيعي كافٍ (30-100)</span>
+                                <span class="text-purple-700">سمّية (&gt;100 ng/mL)</span>
+                            </div>
+                            <div class="relative h-3.5 w-full rounded-full gauge-gradient shadow-inner">
+                                <div id="gaugePointer" class="absolute -top-1.5 w-6 h-6 rounded-full bg-white border-4 border-slate-900 shadow-md transition-all duration-300 -translate-x-1/2" style="right: 14%;"></div>
+                            </div>
+                            <!-- أزرار قيم سريعة للتجربة -->
+                            <div class="flex flex-wrap items-center gap-1.5 mt-3">
+                                <span class="text-xs font-bold text-slate-500 ml-1">قيم سريعة (ng/mL):</span>
+                                <button type="button" onclick="setQuickLab(9)" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-red-50 text-red-700 border border-red-200 hover:bg-red-100">9 (نقص حاد)</button>
+                                <button type="button" onclick="setQuickLab(16)" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-red-50 text-red-700 border border-red-200 hover:bg-red-100">16 (نقص)</button>
+                                <button type="button" onclick="setQuickLab(24)" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100">24 (عدم كفاية)</button>
+                                <button type="button" onclick="setQuickLab(45)" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100">45 (طبيعي)</button>
+                                <button type="button" onclick="setQuickLab(120)" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100">120 (سمية)</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- تنبيه عند اختيار وضع الوقاية المباشرة بدون تحليل -->
+                    <div id="directPreventionBanner" class="hidden bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-emerald-900">
+                        <div class="font-extrabold text-sm flex items-center gap-2">
+                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            تم تفعيل وضع الوقاية والصيانة المباشرة (Maintenance Only)
+                        </div>
+                        <p class="text-xs font-medium text-emerald-800 mt-1">
+                            سيقوم المحاكي بحساب الجرعة الوقائية اليومية أو الأسبوعية الآمنة للفئة العمرية المختارة دون إعطاء جرعات تحميل عالية.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- القسم 3: الشكل الدوائي والتركيز (نقط / أقراص / أمبولات) -->
+                <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+                    <h2 class="text-lg font-extrabold text-slate-800 mb-4 flex items-center gap-2.5">
+                        <span class="bg-brand-600 text-white w-7 h-7 rounded-lg flex items-center justify-center text-sm shadow-sm">3</span>
+                        الشكل الدوائي والتركيز المتوفر
+                    </h2>
+
+                    <!-- بطاقات الأشكال الدوائية الرئيسية -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <!-- 1. نقط فموية 100 وحدة/نقطة -->
+                        <label class="cursor-pointer">
+                            <input type="radio" name="formulation" value="drops100" class="peer sr-only" onchange="calculateDose()">
+                            <div class="h-full rounded-xl border-2 border-slate-200 bg-white p-3.5 peer-checked:border-brand-600 peer-checked:bg-brand-50/70 transition-all hover:bg-slate-50 flex flex-col justify-between">
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-xs font-extrabold px-2 py-0.5 rounded bg-sky-100 text-sky-800">نقط للفم</span>
+                                    <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                                </div>
+                                <div class="font-extrabold text-slate-900 text-sm">نقط (100 وحدة/نقطة)</div>
+                                <div class="text-[11px] text-slate-500 font-semibold mt-1">مثل فيدروب (2800 وحدة/مل) • 4 نقط = 400 وحدة</div>
+                            </div>
+                        </label>
+
+                        <!-- 2. نقط فموية مركزة 400 وحدة/نقطة -->
+                        <label class="cursor-pointer">
+                            <input type="radio" name="formulation" value="drops400" class="peer sr-only" onchange="calculateDose()">
+                            <div class="h-full rounded-xl border-2 border-slate-200 bg-white p-3.5 peer-checked:border-brand-600 peer-checked:bg-brand-50/70 transition-all hover:bg-slate-50 flex flex-col justify-between">
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-xs font-extrabold px-2 py-0.5 rounded bg-sky-100 text-sky-800">نقط مركزة</span>
+                                    <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/></svg>
+                                </div>
+                                <div class="font-extrabold text-slate-900 text-sm">نقط (400 وحدة/نقطة)</div>
+                                <div class="text-[11px] text-slate-500 font-semibold mt-1">النقط المركزة للرضع والأطفال • نقطة واحدة = 400 وحدة</div>
+                            </div>
+                        </label>
+
+                        <!-- 3. أقراص 5,000 وحدة -->
+                        <label class="cursor-pointer">
+                            <input type="radio" name="formulation" value="pill5k" class="peer sr-only" checked onchange="calculateDose()">
+                            <div class="h-full rounded-xl border-2 border-slate-200 bg-white p-3.5 peer-checked:border-brand-600 peer-checked:bg-brand-50/70 transition-all hover:bg-slate-50 flex flex-col justify-between">
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-xs font-extrabold px-2 py-0.5 rounded bg-brand-100 text-brand-800">أقراص / كبسولات</span>
+                                    <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"/><path stroke-width="2" d="M9 12h6"/></svg>
+                                </div>
+                                <div class="font-extrabold text-slate-900 text-sm">تركيز 5,000 وحدة</div>
+                                <div class="text-[11px] text-slate-500 font-semibold mt-1">5,000 IU Cholecalciferol</div>
+                            </div>
+                        </label>
+
+                        <!-- 4. أقراص 10,000 وحدة -->
+                        <label class="cursor-pointer">
+                            <input type="radio" name="formulation" value="pill10k" class="peer sr-only" onchange="calculateDose()">
+                            <div class="h-full rounded-xl border-2 border-slate-200 bg-white p-3.5 peer-checked:border-brand-600 peer-checked:bg-brand-50/70 transition-all hover:bg-slate-50 flex flex-col justify-between">
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-xs font-extrabold px-2 py-0.5 rounded bg-brand-100 text-brand-800">أقراص / كبسولات</span>
+                                    <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"/><path stroke-width="2" d="M12 9v6m-3-3h6"/></svg>
+                                </div>
+                                <div class="font-extrabold text-slate-900 text-sm">تركيز 10,000 وحدة</div>
+                                <div class="text-[11px] text-slate-500 font-semibold mt-1">10,000 IU Cholecalciferol</div>
+                            </div>
+                        </label>
+
+                        <!-- 5. كبسولات 50,000 أو أقراص 1,000 وحدة -->
+                        <label class="cursor-pointer">
+                            <input type="radio" name="formulation" value="pill50k" class="peer sr-only" onchange="calculateDose()">
+                            <div class="h-full rounded-xl border-2 border-slate-200 bg-white p-3.5 peer-checked:border-brand-600 peer-checked:bg-brand-50/70 transition-all hover:bg-slate-50 flex flex-col justify-between">
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-xs font-extrabold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">كبسولات أسبوعية / يومية</span>
+                                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="16" rx="6" stroke-width="2"/><line x1="6" y1="12" x2="18" y2="12" stroke-width="2"/></svg>
+                                </div>
+                                <div class="font-extrabold text-slate-900 text-sm">50,000 أو 1,000 وحدة</div>
+                                <div class="text-[11px] text-slate-500 font-semibold mt-1">يعرض جرعة الكبسولات الأسبوعية واليومية معاً</div>
+                            </div>
+                        </label>
+
+                        <!-- 6. أمبولات 200,000 وحدة (D3 / D2) -->
+                        <label class="cursor-pointer">
+                            <input type="radio" name="formulation" value="amp200k" class="peer sr-only" onchange="calculateDose()">
+                            <div class="h-full rounded-xl border-2 border-slate-200 bg-white p-3.5 peer-checked:border-brand-600 peer-checked:bg-brand-50/70 transition-all hover:bg-slate-50 flex flex-col justify-between">
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-xs font-extrabold px-2 py-0.5 rounded bg-amber-100 text-amber-800">أمبولات 200,000</span>
+                                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="20" rx="2" stroke-width="2"/><path d="M9 10h6" stroke-width="2"/></svg>
+                                </div>
+                                <div class="font-extrabold text-slate-900 text-sm">أمبولات 200 ألف (D3 / D2)</div>
+                                <div class="text-[11px] text-slate-500 font-semibold mt-1">شرب بالفم أو حقن عضلي</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- إعدادات إضافية خاصة بالأمبولات (تظهر عند اختيار الأمبولات) -->
+                    <div id="ampouleOptionsPanel" class="hidden mt-4 bg-amber-50/80 border border-amber-200 rounded-xl p-4 space-y-3 fade-in">
+                        <div class="text-xs font-extrabold text-amber-900">خيارات أمبولات 200,000 وحدة دولية الدقيقة:</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">نوع الفيتامين بالأمبولة:</label>
+                                <select id="ampType" onchange="calculateDose()" class="w-full rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-800">
+                                    <option value="D3">فيتامين D3 (Cholecalciferol) - المفضل سريرياً</option>
+                                    <option value="D2">فيتامين D2 (Ergocalciferol)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">طريقة الإعطاء المفضلة:</label>
+                                <select id="ampRoute" onchange="calculateDose()" class="w-full rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-800">
+                                    <option value="oral">شرب بالفم (مع نصف كوب حليب كامل الدسم / وجبة دسمة)</option>
+                                    <option value="im">حقن عضلي عميق (IM) - لحالات سوء الامتصاص</option>
+                                </select>
+                            </div>
+                        </div>
+                        <p id="ampPkNote" class="text-[11px] font-semibold text-amber-800 leading-relaxed bg-white/70 p-2.5 rounded-lg border border-amber-200/60"></p>
+                    </div>
+                </section>
+
+                <!-- القسم 4: العوامل السريرية الخاصة (Checkboxes) -->
+                <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+                    <h2 class="text-lg font-extrabold text-slate-800 mb-3 flex items-center gap-2.5">
+                        <span class="bg-brand-600 text-white w-7 h-7 rounded-lg flex items-center justify-center text-sm shadow-sm">4</span>
+                        عوامل سريرية تعدّل الجرعة (اختياري)
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100/70 cursor-pointer transition-all">
+                            <input type="checkbox" id="highRiskFactor" onchange="calculateDose()" class="mt-1 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                            <div>
+                                <div class="font-bold text-sm text-slate-900">سمنة مفرطة (BMI &gt; 30) أو سوء امتصاص</div>
+                                <div class="text-xs text-slate-500 font-medium mt-0.5">أو تناول أدوية تزيد التكسير الكبدي (مضادات الصرع/الكورتيزون) ← يضاعف الجرعة المطلوبة (2x) تلقائياً.</div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100/70 cursor-pointer transition-all">
+                            <input type="checkbox" id="pregnancyFactor" onchange="calculateDose()" class="mt-1 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                            <div>
+                                <div class="font-bold text-sm text-slate-900">حمل أو رضاعة طبيعية</div>
+                                <div class="text-xs text-slate-500 font-medium mt-0.5">يمنع جرعات الصدمة العالية (Bolus 200,000 IU) ويوجه للجرعات اليومية الآمنة.</div>
+                            </div>
+                        </label>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- العمود الأيسر: الخطة العلاجية والوقائية التفصيلية (5 أعمدة) -->
+            <div class="lg:col-span-5 relative">
+                <div class="sticky top-6 space-y-5">
+                    
+                    <!-- البطاقة الرئيسية للخطة الدوائية -->
+                    <div id="resultBox" class="bg-white shadow-xl rounded-2xl border-2 border-brand-500 overflow-hidden fade-in">
+                        <!-- شريط العنوان العلوي للنتيجة -->
+                        <div id="resultHeader" class="bg-brand-600 text-white px-5 py-4 flex items-center justify-between">
+                            <div>
+                                <span id="resultBadge" class="text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 text-white">
+                                    بروتوكول علاجي + وقائي
+                                </span>
+                                <h3 id="resultTitle" class="text-lg font-extrabold mt-1">خطة الجرعات المحسوبة</h3>
+                            </div>
+                            <div id="resultIcon" class="bg-white/15 p-2 rounded-xl"></div>
+                        </div>
+
+                        <!-- محتوى البطاقة -->
+                        <div class="p-5 space-y-4">
+                            
+                            <!-- تنبيه السلامة (يظهر فقط عند وجود مانع طبي أو اختيار تركيز غير مناسب للسن) -->
+                            <div id="safetyAlertBox" class="hidden rounded-xl p-4 border-r-4 bg-red-50 border-red-600 text-red-900 space-y-1.5">
+                                <div class="font-extrabold text-sm flex items-center gap-1.5">
+                                    <svg class="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    <span id="safetyAlertTitle">تحذير سلامة دوائية</span>
+                                </div>
+                                <p id="safetyAlertText" class="text-xs font-semibold leading-relaxed"></p>
+                            </div>
+
+                            <!-- المرحلة الأولى: علاج العجز (Loading / Corrective Phase) -->
+                            <div id="phase1Box" class="rounded-xl bg-brand-50/70 border border-brand-200 p-4 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-brand-800 bg-brand-100 px-2.5 py-1 rounded-md">
+                                        المرحلة الأولى: جرعة تعويض العجز (العلاجية)
+                                    </span>
+                                    <span id="phase1TargetIU" class="text-xs font-extrabold text-brand-700"></span>
+                                </div>
+                                <div id="phase1DoseMain" class="text-base font-extrabold text-slate-900 leading-snug pt-1"></div>
+                                <div id="phase1DoseSub" class="text-xs font-semibold text-slate-600 leading-relaxed"></div>
+                            </div>
+
+                            <!-- المرحلة الثانية: جرعة الصيانة والوقاية (Maintenance Phase) -->
+                            <div id="phase2Box" class="rounded-xl bg-emerald-50/70 border border-emerald-200 p-4 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span id="phase2Label" class="text-xs font-extrabold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-md">
+                                        المرحلة الثانية: جرعة الصيانة والوقاية المستمرة
+                                    </span>
+                                    <span id="phase2TargetIU" class="text-xs font-extrabold text-emerald-700"></span>
+                                </div>
+                                <div id="phase2DoseMain" class="text-base font-extrabold text-slate-900 leading-snug pt-1"></div>
+                                <div id="phase2DoseSub" class="text-xs font-semibold text-slate-600 leading-relaxed"></div>
+                            </div>
+
+                            <!-- موعد إعادة التحليل والمتابعة -->
+                            <div class="rounded-xl bg-slate-100 border border-slate-200/80 p-3.5 flex items-start gap-3">
+                                <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <div class="text-xs">
+                                    <span class="font-extrabold text-slate-800">موعد إعادة التحليل المقترح:</span>
+                                    <p id="retestRecommendation" class="text-slate-600 font-semibold mt-0.5 leading-relaxed"></p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- بطاقة الإرشادات الصيدلانية والحركية -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 space-y-2.5">
+                        <div class="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            ملاحظات صيدلانية لضمان أعلى امتصاص:
+                        </div>
+                        <ul class="text-xs text-slate-600 font-medium space-y-1.5 list-disc list-inside">
+                            <li>فيتامين د يذوب في الدهون (<span class="font-bold text-slate-800">Fat-Soluble</span>)، لذا يُؤخذ مع الوجبة الأكبر أو مع الحليب لزيادة الامتصاص بنسبة تصل إلى 50%.</li>
+                            <li>في نقط الفم من نوع <span class="font-bold text-slate-800">فيدروب (2800 وحدة/مل)</span>: القطارة الكاملة (1 مل) تحتوي على 28 نقطة (كل نقطة = 100 وحدة دولية).</li>
+                            <li>يُفضل دائماً <span class="font-bold text-slate-800">فيتامين D3</span> على D2 لبقائه فترة أطول في الدورة الدموية وفعاليته الأعلى في رفع مخزون 25(OH)D.</li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // حالة التطبيق الحالية
+        let currentLabMode = 'lab'; // 'lab' or 'prevention'
+        let lastLabUnit = 'ng';     // 'ng' or 'nmol'
+
+        // اختيار سريع للفئة العمرية
+        function selectAgePreset(preset) {
+            const ageInput = document.getElementById('ageValue');
+            const unitSelect = document.getElementById('ageUnit');
+            const pregnancyCheck = document.getElementById('pregnancyFactor');
+
+            if (preset === 'infant') {
+                ageInput.value = 4;
+                unitSelect.value = 'months';
+                pregnancyCheck.checked = false;
+                // اختيار تلقائي للنقط إذا كان المستخدم على الأقراص لتسهيل الاستخدام
+                document.querySelector('input[name="formulation"][value="drops100"]').checked = true;
+            } else if (preset === 'child') {
+                ageInput.value = 6;
+                unitSelect.value = 'years';
+                pregnancyCheck.checked = false;
+            } else if (preset === 'adult') {
+                ageInput.value = 32;
+                unitSelect.value = 'years';
+            } else if (preset === 'elderly') {
+                ageInput.value = 70;
+                unitSelect.value = 'years';
+                pregnancyCheck.checked = false;
+            }
+            calculateDose();
+        }
+
+        function handleCustomAgeInput() {
+            calculateDose();
+        }
+
+        // تحديد الفئة العمرية بناءً على الرقم والوحدة (بدءاً من يوم واحد)
+        function getAgeCategory() {
+            let val = parseFloat(document.getElementById('ageValue').value);
+            if (isNaN(val) || val < 1) {
+                val = 1;
+            }
+            const unit = document.getElementById('ageUnit').value;
+
+            let ageInYears = 0;
+            let ageDescription = '';
+
+            if (unit === 'days') {
+                ageInYears = val / 365;
+                ageDescription = `${val} يوم`;
+            } else if (unit === 'months') {
+                ageInYears = val / 12;
+                ageDescription = `${val} شهر`;
+            } else {
+                ageInYears = val;
+                ageDescription = `${val} سنة`;
+            }
+
+            let category = 'adult';
+            let label = 'بالغ (18 - 65 سنة)';
+
+            if (ageInYears <= 1) {
+                category = 'infant';
+                label = `رضيع / حديث ولادة (${ageDescription})`;
+            } else if (ageInYears < 18) {
+                category = 'child';
+                label = `طفل / مراهق (${ageDescription})`;
+            } else if (ageInYears <= 65) {
+                category = 'adult';
+                label = `بالغ (${ageDescription})`;
+            } else {
+                category = 'elderly';
+                label = `كبار السن (${ageDescription})`;
+            }
+
+            // تحديث شكل أزرار الفئات العمرية
+            ['infant', 'child', 'adult', 'elderly'].forEach(id => {
+                const btn = document.getElementById(`preset-${id}`);
+                if (id === category) {
+                    btn.className = "age-preset-btn rounded-xl border-2 border-brand-600 bg-brand-50 text-brand-900 p-2.5 text-center transition-all shadow-sm";
+                } else {
+                    btn.className = "age-preset-btn rounded-xl border-2 border-slate-200 bg-white text-slate-700 hover:bg-slate-50 p-2.5 text-center transition-all";
+                }
+            });
+
+            document.getElementById('ageCategoryBadge').textContent = label;
+            return { category, ageInYears, ageDescription };
+        }
+
+        // التبديل بين وضع وجود تحليل ووضع الوقاية المباشرة
+        function setLabMode(mode) {
+            currentLabMode = mode;
+            const labBtn = document.getElementById('modeLabBtn');
+            const prevBtn = document.getElementById('modePrevBtn');
+            const labContainer = document.getElementById('labInputContainer');
+            const prevBanner = document.getElementById('directPreventionBanner');
+
+            if (mode === 'lab') {
+                labBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-brand-700 shadow-sm";
+                prevBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
+                labContainer.classList.remove('hidden');
+                prevBanner.classList.add('hidden');
+            } else {
+                prevBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-emerald-700 shadow-sm";
+                labBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
+                labContainer.classList.add('hidden');
+                prevBanner.classList.remove('hidden');
+            }
+            calculateDose();
+        }
+
+        // التحويل التلقائي بين ng/mL و nmol/L (1 ng/mL = 2.5 nmol/L)
+        function handleLabUnitChange() {
+            const unitSelect = document.getElementById('labUnit').value;
+            const labInput = document.getElementById('labValue');
+            let val = parseFloat(labInput.value) || 0;
+
+            if (unitSelect === 'nmol' && lastLabUnit === 'ng') {
+                labInput.value = (val * 2.5).toFixed(1);
+            } else if (unitSelect === 'ng' && lastLabUnit === 'nmol') {
+                labInput.value = (val / 2.5).toFixed(1);
+            }
+            lastLabUnit = unitSelect;
+            calculateDose();
+        }
+
+        function setQuickLab(ngValue) {
+            const unitSelect = document.getElementById('labUnit').value;
+            const labInput = document.getElementById('labValue');
+            labInput.value = unitSelect === 'ng' ? ngValue : (ngValue * 2.5).toFixed(1);
+            calculateDose();
+        }
+
+        // تقييم نسبة التحليل وتحديث المقياس البصري
+        function evaluateLabStatus() {
+            if (currentLabMode === 'prevention') {
+                return {
+                    status: 'prevention_only',
+                    ngValue: null,
+                    title: 'وقاية وصيانة مباشرة',
+                    decision: 'جرعة صيانة ووقاية'
+                };
+            }
+
+            let rawVal = parseFloat(document.getElementById('labValue').value);
+            if (isNaN(rawVal) || rawVal < 0) rawVal = 0;
+
+            const unit = document.getElementById('labUnit').value;
+            const ngVal = unit === 'ng' ? rawVal : (rawVal / 2.5);
+            const nmolVal = unit === 'nmol' ? rawVal : (rawVal * 2.5);
+
+            // نص التحويل المكافئ
+            const convertedText = document.getElementById('convertedUnitText');
+            if (unit === 'ng') {
+                convertedText.textContent = `يعادل تقريباً: ${nmolVal.toFixed(1)} nmol/L`;
+            } else {
+                convertedText.textContent = `يعادل تقريباً: ${ngVal.toFixed(1)} ng/mL`;
+            }
+
+            // تحريك المؤشر على المقياس البصري
+            const pointer = document.getElementById('gaugePointer');
+            let percent = 0;
+            if (ngVal <= 20) {
+                percent = (ngVal / 20) * 20; // 0 to 20%
+            } else if (ngVal < 30) {
+                percent = 20 + ((ngVal - 20) / 10) * 15; // 20 to 35%
+            } else if (ngVal <= 100) {
+                percent = 35 + ((ngVal - 30) / 70) * 45; // 35 to 80%
+            } else {
+                percent = Math.min(98, 80 + ((ngVal - 100) / 50) * 20); // 80 to 98%
+            }
+            pointer.style.right = `${Math.max(2, Math.min(98, percent))}%`;
+
+            // تحديث بطاقة التشخيص التلقائي
+            const card = document.getElementById('autoDiagnosisCard');
+            const badge = document.getElementById('protocolDecisionBadge');
+            const title = document.getElementById('diagnosisStatusTitle');
+            const sub = document.getElementById('diagnosisStatusSub');
+
+            if (ngVal < 20) {
+                card.className = "rounded-xl p-3.5 border-2 border-red-300 bg-red-50 text-red-950 transition-all";
+                badge.className = "text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-red-600 text-white";
+                badge.textContent = "جرعة عجز علاجية + صيانة";
+                title.textContent = `نقص فيتامين د (Deficiency) • ${ngVal.toFixed(1)} ng/mL`;
+                sub.textContent = "يتطلب بروتوكول تحميل علاجي (Loading Dose) لتعويض العجز متبوعاً بجرعة صيانة.";
+                return { status: 'deficiency', ngValue: ngVal };
+            } else if (ngVal < 30) {
+                card.className = "rounded-xl p-3.5 border-2 border-amber-300 bg-amber-50 text-amber-950 transition-all";
+                badge.className = "text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-600 text-white";
+                badge.textContent = "جرعة تصحيحية + صيانة";
+                title.textContent = `عدم كفاية (Insufficiency) • ${ngVal.toFixed(1)} ng/mL`;
+                sub.textContent = "يتطلب جرعة علاجية تصحيحية متوسطة لرفع المستوى فوق 30 ng/mL ثم جرعة صيانة.";
+                return { status: 'insufficiency', ngValue: ngVal };
+            } else if (ngVal <= 100) {
+                card.className = "rounded-xl p-3.5 border-2 border-emerald-300 bg-emerald-50 text-emerald-950 transition-all";
+                badge.className = "text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-600 text-white";
+                badge.textContent = "جرعة صيانة فقط";
+                title.textContent = `مستوى طبيعي كافٍ (Sufficiency) • ${ngVal.toFixed(1)} ng/mL`;
+                sub.textContent = "المخزون ممتاز؛ لا يحتاج لجرعات تحميل عالية، فقط جرعة وقائية للحفاظ على المستوى.";
+                return { status: 'sufficiency', ngValue: ngVal };
+            } else {
+                card.className = "rounded-xl p-3.5 border-2 border-purple-400 bg-purple-50 text-purple-950 transition-all";
+                badge.className = "text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-purple-700 text-white";
+                badge.textContent = "إيقاف فوري للفيتامين";
+                title.textContent = `سمّية محتملة / ارتفاع مفرط (Toxicity Risk) • ${ngVal.toFixed(1)} ng/mL`;
+                sub.textContent = "يجب إيقاف كافة مكملات فيتامين د والكالسيوم فوراً وفحص كالسيوم الدم.";
+                return { status: 'toxicity', ngValue: ngVal };
+            }
+        }
+
+        // تنسيق حسابات النقط الفموية
+        function formatDrops(targetIU, dropConc) {
+            const dropsCount = Math.round(targetIU / dropConc);
+            if (dropConc === 100) {
+                const ml = (targetIU / 2800).toFixed(2);
+                if (dropsCount >= 20) {
+                    const half = Math.round(dropsCount / 2);
+                    return `${dropsCount} نقطة يومياً (حوالي ${ml} مل بالقطارة، ويمكن تقسيمها ${half} نقط صباحاً و${half} مساءً)`;
+                }
+                return `${dropsCount} نقط يومياً بالفم`;
+            } else {
+                // 400 IU/drop
+                if (dropsCount === 1) return `نقطة واحدة (1 نقطة) يومياً بالفم`;
+                if (dropsCount === 2) return `نقطتان (2 نقطة) يومياً بالفم`;
+                return `${dropsCount} نقط يومياً بالفم`;
+            }
+        }
+
+        // المحرك الرئيسي لحساب الجرعات
+        function calculateDose() {
+            const { category, ageInYears, ageDescription } = getAgeCategory();
+            const labEval = evaluateLabStatus();
+            const formulation = document.querySelector('input[name="formulation"]:checked').value;
+            const isHighRisk = document.getElementById('highRiskFactor').checked;
+            const isPregnant = document.getElementById('pregnancyFactor').checked;
+            const mult = isHighRisk ? 2 : 1;
+
+            // إظهار أو إخفاء إعدادات الأمبولات
+            const ampPanel = document.getElementById('ampouleOptionsPanel');
+            if (formulation === 'amp200k') {
+                ampPanel.classList.remove('hidden');
+                const ampType = document.getElementById('ampType').value;
+                const ampPkNote = document.getElementById('ampPkNote');
+                if (ampType === 'D3') {
+                    ampPkNote.innerHTML = `<strong>حركية دوائية (D3 - Cholecalciferol):</strong> يتميز بعمر نصف أطول وألفة أعلى للبروتين الناقل (DBP)، ويرفع مستوى 25(OH)D في الدم بكفاءة تفوق D2 بحوالي 1.7 إلى 2 ضعف.`;
+                } else {
+                    ampPkNote.innerHTML = `<strong>حركية دوائية (D2 - Ergocalciferol):</strong> ذو مصدر نباتي وعمر نصف أقصر من D3؛ يحتاج لمتابعة أدق أو تكرار أقرب في جرعات الصيانة للحفاظ على ثبات مستوى الدم.`;
+                }
+            } else {
+                ampPanel.classList.add('hidden');
+            }
+
+            // عناصر عرض النتائج
+            const safetyAlertBox = document.getElementById('safetyAlertBox');
+            const safetyAlertTitle = document.getElementById('safetyAlertTitle');
+            const safetyAlertText = document.getElementById('safetyAlertText');
+            const phase1Box = document.getElementById('phase1Box');
+            const phase2Box = document.getElementById('phase2Box');
+            const phase1TargetIU = document.getElementById('phase1TargetIU');
+            const phase1DoseMain = document.getElementById('phase1DoseMain');
+            const phase1DoseSub = document.getElementById('phase1DoseSub');
+            const phase2Label = document.getElementById('phase2Label');
+            const phase2TargetIU = document.getElementById('phase2TargetIU');
+            const phase2DoseMain = document.getElementById('phase2DoseMain');
+            const phase2DoseSub = document.getElementById('phase2DoseSub');
+            const retestRec = document.getElementById('retestRecommendation');
+            const resultHeader = document.getElementById('resultHeader');
+            const resultBadge = document.getElementById('resultBadge');
+            const resultTitle = document.getElementById('resultTitle');
+
+            // إعادة الضبط الافتراضي
+            safetyAlertBox.classList.add('hidden');
+            phase1Box.classList.remove('hidden');
+            phase2Box.classList.remove('hidden');
+
+            // 1. حالة السمية (> 100 ng/mL)
+            if (labEval.status === 'toxicity') {
+                resultHeader.className = "bg-red-700 text-white px-5 py-4 flex items-center justify-between";
+                resultBadge.textContent = "تحذير طوارئ سريري";
+                resultTitle.textContent = "إيقاف فوري لفيتامين د (خطر السمّية)";
+                safetyAlertBox.classList.remove('hidden');
+                safetyAlertTitle.textContent = "ارتفاع مفرط في مستوى 25(OH)D (> 100 ng/mL)";
+                safetyAlertText.textContent = "يُمنع صرف أي جرعة من فيتامين د. يجب إيقاف كافة المكملات المحتوية على فيتامين د والكالسيوم فوراً، وإجراء تحليل كالسيوم الدم (Serum Calcium) ووظائف الكلى، مع الإكثار من السوائل.";
+                phase1Box.classList.add('hidden');
+                phase2Box.classList.add('hidden');
+                retestRec.textContent = "إعادة فحص مستوى الكالسيوم وفيتامين د بعد 4 أسابيع من الإيقاف التام.";
+                return;
+            }
+
+            // تحديد ما إذا كان المريض يحتاج مرحلة علاجية أولى أم صيانة فقط
+            const needsTreatmentPhase = (labEval.status === 'deficiency' || labEval.status === 'insufficiency');
+
+            if (needsTreatmentPhase) {
+                resultHeader.className = "bg-brand-700 text-white px-5 py-4 flex items-center justify-between";
+                resultBadge.textContent = isHighRisk ? "بروتوكول مكثف (مضاعف 2x)" : "بروتوكول علاجي + صيانة";
+                resultTitle.textContent = labEval.status === 'deficiency' ? "خطة علاج نقص فيتامين د" : "خطة تصحيح عدم الكفاية";
+                phase2Label.textContent = "المرحلة الثانية: جرعة الصيانة والوقاية (بعد انتهاء العلاج)";
+            } else {
+                resultHeader.className = "bg-emerald-700 text-white px-5 py-4 flex items-center justify-between";
+                resultBadge.textContent = "بروتوكول وقائي (صيانة فقط)";
+                resultTitle.textContent = "خطة الوقاية والحفاظ على المستوى الطبيعي";
+                phase1Box.classList.add('hidden');
+                phase2Label.textContent = "الجرعة الوقائية المستمرة (Maintenance Dose)";
+            }
+
+            // ================== حسابات الفئة 1: الرضع (من عمر يوم إلى 12 شهراً) ==================
+            if (category === 'infant') {
+                const maintIU = 400 * mult;
+                const treatIU = (labEval.status === 'deficiency' ? 2000 : 1000) * mult;
+
+                // فحص سلامة الشكل الدوائي للرضع
+                if (formulation !== 'drops100' && formulation !== 'drops400') {
+                    safetyAlertBox.classList.remove('hidden');
+                    safetyAlertTitle.textContent = "تنبيه سلامة للرضع وحديثي الولادة";
+                    safetyAlertText.textContent = "الأقراص والأمبولات عالية التركيز غير مناسبة للرضع لخطر الاختناق والتسمم الدوائي. تم تلقائياً عرض الجرعة الآمنة باستخدام نقط الفم (Oral Drops) المخصصة للرضع.";
+                }
+
+                const activeDropConc = (formulation === 'drops400') ? 400 : 100;
+                const dropLabel = activeDropConc === 100 ? "نقط بتركيز 100 وحدة/نقطة (مثل فيدروب)" : "نقط مركزة بتركيز 400 وحدة/نقطة";
+
+                if (needsTreatmentPhase) {
+                    phase1TargetIU.textContent = `الهدف: ${treatIU.toLocaleString()} وحدة/يومياً`;
+                    phase1DoseMain.textContent = `${formatDrops(treatIU, activeDropConc)} لمدة 6 أسابيع.`;
+                    phase1DoseSub.textContent = `الشكل الدوائي: ${dropLabel}. في حال استخدام نقط 400 وحدة/نقطة تكون الجرعة ${Math.round(treatIU/400)} نقط يومياً، وفي نقط 100 وحدة/نقطة تكون ${Math.round(treatIU/100)} نقطة يومياً.`;
+                }
+
+                phase2TargetIU.textContent = `الهدف: ${maintIU.toLocaleString()} وحدة/يومياً`;
+                phase2DoseMain.textContent = `${formatDrops(maintIU, activeDropConc)} بانتظام (بدءاً من الأيام الأولى للولادة).`;
+                phase2DoseSub.textContent = `تعادل 4 نقط يومياً من تركيز (100 وحدة/نقطة) أو نقطة واحدة يومياً من تركيز (400 وحدة/نقطة).`;
+                retestRec.textContent = needsTreatmentPhase ? "يُعاد تحليل 25(OH)D بعد 6 إلى 8 أسابيع من بدء العلاج للتأكد من تخطي حاجز 30 ng/mL." : "لا يلزم إعادة التحليل روتينياً في الرضع الأصحاء طالما مستمر على الجرعة الوقائية.";
+                return;
+            }
+
+            // ================== حسابات الفئة 2: الأطفال والمراهقين (1 - 18 سنة) ==================
+            if (category === 'child') {
+                const maintIU = (ageInYears < 10 ? 600 : 1000) * mult;
+                const treatIU = (labEval.status === 'deficiency' ? (ageInYears < 10 ? 2000 : 4000) : 2000) * mult;
+
+                if (formulation === 'amp200k') {
+                    safetyAlertBox.classList.remove('hidden');
+                    safetyAlertTitle.textContent = "تحذير: أمبولات 200,000 وحدة للأطفال";
+                    safetyAlertText.textContent = "لا تُصرف أمبولات 200,000 وحدة كروتين منزلي للأطفال لتجنب فرط كالسيوم الدم (Hypercalcemia)، وتقتصر على بروتوكول الصدمة (Stoss Therapy) لحالات الكساح الشديد تحت إشراف طبي. إليك البديل الآمن بالنقط والأقراص:";
+                }
+
+                // المرحلة الأولى للأطفال
+                if (needsTreatmentPhase) {
+                    phase1TargetIU.textContent = `الهدف: ${treatIU.toLocaleString()} وحدة/يومياً (6-8 أسابيع)`;
+                    if (formulation === 'drops100') {
+                        phase1DoseMain.textContent = `${formatDrops(treatIU, 100)} لمدة 6 إلى 8 أسابيع.`;
+                        phase1DoseSub.textContent = `ملء قطارة كاملة (1 مل = 28 نقطة من فيدروب) يعطي 2,800 وحدة دولية يومياً وهو خيار عملي جداً للأطفال.`;
+                    } else if (formulation === 'drops400') {
+                        phase1DoseMain.textContent = `${formatDrops(treatIU, 400)} لمدة 6 إلى 8 أسابيع.`;
+                        phase1DoseSub.textContent = `النقط المركزة (400 وحدة/نقطة) توفر الجرعة العلاجية بعدد نقط قليل وسهل البلع.`;
+                    } else if (formulation === 'pill5k') {
+                        phase1DoseMain.textContent = treatIU >= 4000 ? "قرص واحد (5,000 وحدة) يومياً لمدة 6 إلى 8 أسابيع." : "قرص واحد (5,000 وحدة) يوم بعد يوم لمدة 6 إلى 8 أسابيع.";
+                        phase1DoseSub.textContent = "يُشترط قدرة الطفل على بلع الأقراص بأمان بعد الوجبة الرئيسية.";
+                    } else if (formulation === 'pill10k') {
+                        phase1DoseMain.textContent = treatIU >= 4000 ? "قرص واحد (10,000 وحدة) 3 مرات أسبوعياً لمدة 6-8 أسابيع." : "قرص واحد (10,000 وحدة) مرتين أسبوعياً لمدة 6-8 أسابيع.";
+                        phase1DoseSub.textContent = "مناسب للمراهقين والأطفال الكبار القادرين على البلع.";
+                    } else if (formulation === 'pill50k') {
+                        phase1DoseMain.textContent = ageInYears >= 10 ? "كبسولة 50,000 وحدة أسبوعياً لمدة 6-8 أسابيع (أو 2 إلى 4 أقراص من تركيز 1,000 وحدة يومياً)." : `${Math.round(treatIU/1000)} أقراص من تركيز 1,000 وحدة يومياً لمدة 6-8 أسابيع.`;
+                        phase1DoseSub.textContent = "يُفضل تركيز 1,000 وحدة يومياً للأطفال الأصغر سناً.";
+                    } else {
+                        // في حال اختيار أمبولات، نعرض بديل النقط الآمن
+                        phase1DoseMain.textContent = `البديل الآمن: ${formatDrops(treatIU, 100)} (أو ${formatDrops(treatIU, 400)} من النقط المركزة) لمدة 6-8 أسابيع.`;
+                        phase1DoseSub.textContent = "أو قرص 5,000 وحدة يوم بعد يوم للأطفال القادرين على البلع.";
+                    }
+                }
+
+                // المرحلة الثانية (الصيانة) للأطفال
+                phase2TargetIU.textContent = `الهدف: ${maintIU.toLocaleString()} وحدة/يومياً`;
+                if (formulation === 'drops100') {
+                    phase2DoseMain.textContent = `${formatDrops(maintIU, 100)} للاستمرار الوقائي.`;
+                    phase2DoseSub.textContent = "تؤخذ مع وجبة الطعام أو الحليب.";
+                } else if (formulation === 'drops400') {
+                    phase2DoseMain.textContent = `${formatDrops(maintIU, 400)} للاستمرار الوقائي.`;
+                    phase2DoseSub.textContent = "نقطة إلى نقطتين يومياً حسب العمر (600 - 1,000 وحدة).";
+                } else if (formulation === 'pill5k') {
+                    phase2DoseMain.textContent = mult === 2 ? "قرص واحد (5,000 وحدة) مرتين أسبوعياً." : "قرص واحد (5,000 وحدة) مرة واحدة كل أسبوع.";
+                    phase2DoseSub.textContent = "وللأطفال الصغار يُفضل استخدام النقط اليومية (6-10 نقط فيدروب يومياً).";
+                } else if (formulation === 'pill50k') {
+                    phase2DoseMain.textContent = `قرص واحد من تركيز 1,000 وحدة دولية ${mult === 2 ? 'مرتين يومياً' : 'يومياً'}.`;
+                    phase2DoseSub.textContent = "لا تُستخدم كبسولات 50,000 وحدة كوقاية روتينية للأطفال.";
+                } else {
+                    phase2DoseMain.textContent = `البديل الوقائي الآمن للأطفال: 6 إلى 10 نقط يومياً (تركيز 100 وحدة/نقطة) أو نقطتان يومياً (تركيز 400 وحدة/نقطة).`;
+                    phase2DoseSub.textContent = "أو قرص 1,000 وحدة يومياً للأطفال القادرين على البلع.";
+                }
+
+                retestRec.textContent = needsTreatmentPhase ? "يُعاد تحليل فيتامين د بعد 8 أسابيع من بدء الجرعة العلاجية." : "متابعة سنوية روتينية مع الحفاظ على التعرض الصحي للشمس.";
+                return;
+            }
+
+            // ================== حسابات الفئة 3 و 4: البالغين (18-65) وكبار السن (>65) ==================
+            const baseTreatDaily = labEval.status === 'deficiency' ? 6000 : 3000;
+            const treatDailyIU = baseTreatDaily * mult;
+            const treatWeeklyIU = (labEval.status === 'deficiency' ? 50000 : 25000) * mult;
+            const maintDailyIU = (category === 'elderly' ? 2000 : 1500) * mult;
+
+            // فحص محاذير الأمبولات (200,000 وحدة) في الحوامل وكبار السن
+            if (formulation === 'amp200k' && (isPregnant || category === 'elderly')) {
+                safetyAlertBox.classList.remove('hidden');
+                if (isPregnant) {
+                    safetyAlertTitle.textContent = "مانع استخدام في الحمل والرضاعة (Bolus Dose Warning)";
+                    safetyAlertText.textContent = "يُمنع استخدام الجرعات الضخمة المفاجئة (أمبولات 200,000 وحدة) أثناء الحمل؛ ويُستعاض عنها بالجرعات اليومية أو الأسبوعية الآمنة (حتى 4,000 وحدة يومياً). تم عرض البديل الآمن أدناه:";
+                } else {
+                    safetyAlertTitle.textContent = "تنبيه لكبار السن فوق 65 عاماً";
+                    safetyAlertText.textContent = "تشير الدراسات السريرية إلى أن الجرعات الضخمة المفاجئة (Bolus 200,000 IU) لكبار السن قد تزيد بشكل عكسي من خطر السقوط والكسور. يُفضل بشدة استخدام الأقراص اليومية أو الأسبوعية.";
+                }
+            }
+
+            // المرحلة الأولى للبالغين وكبار السن
+            if (needsTreatmentPhase) {
+                phase1TargetIU.textContent = `الهدف: ${treatDailyIU.toLocaleString()} وحدة/يومياً (${treatWeeklyIU.toLocaleString()} أسبوعياً)`;
+
+                if (formulation === 'pill5k') {
+                    if (labEval.status === 'deficiency') {
+                        phase1DoseMain.textContent = mult === 2
+                            ? "قرصان (2 قرص × 5,000 وحدة = 10,000 وحدة) يومياً لمدة 8 أسابيع."
+                            : "قرص واحد (5,000 وحدة) يومياً لمدة 8 أسابيع (أو قرص يومياً + قرصين إضافيين أسبوعياً لمعادلة 6,000 وحدة/يوم).";
+                    } else {
+                        phase1DoseMain.textContent = mult === 2
+                            ? "قرص واحد (5,000 وحدة) يومياً لمدة 6 إلى 8 أسابيع."
+                            : "قرص واحد (5,000 وحدة) يوم بعد يوم (4 مرات أسبوعياً) لمدة 6 إلى 8 أسابيع.";
+                    }
+                    phase1DoseSub.textContent = "تؤخذ الكبسولة وسط أو بعد الوجبة الرئيسية مباشرة.";
+                } else if (formulation === 'pill10k') {
+                    if (labEval.status === 'deficiency') {
+                        phase1DoseMain.textContent = mult === 2
+                            ? "قرص واحد (10,000 وحدة) يومياً لمدة 8 أسابيع."
+                            : "قرص واحد (10,000 وحدة) 5 مرات أسبوعياً (أو يوم بعد يوم) لمدة 8 أسابيع.";
+                    } else {
+                        phase1DoseMain.textContent = mult === 2
+                            ? "قرص واحد (10,000 وحدة) 4 مرات أسبوعياً لمدة 6 أسابيع."
+                            : "قرص واحد (10,000 وحدة) مرتين إلى 3 مرات أسبوعياً لمدة 6 أسابيع.";
+                    }
+                    phase1DoseSub.textContent = "يحقق مخزوناً ممتازاً وسريعاً بأقل عدد من الأقراص.";
+                } else if (formulation === 'pill50k') {
+                    if (labEval.status === 'deficiency') {
+                        phase1DoseMain.textContent = mult === 2
+                            ? "كبسولتان (50,000 وحدة) أسبوعياً لمدة 8 أسابيع."
+                            : "كبسولة واحدة (50,000 وحدة) مرة واحدة أسبوعياً لمدة 8 أسابيع (أو 6 أقراص من تركيز 1,000 وحدة يومياً).";
+                    } else {
+                        phase1DoseMain.textContent = "كبسولة واحدة (50,000 وحدة) كل أسبوعين لمدة 6-8 أسابيع (أو 3 أقراص من تركيز 1,000 وحدة يومياً).";
+                    }
+                    phase1DoseSub.textContent = "بروتوكول الـ 50,000 وحدة أسبوعياً لمدة 8 أسابيع هو المعيار القياسي لجمعية الغدد الصماء.";
+                } else if (formulation === 'amp200k') {
+                    if (isPregnant) {
+                        phase1DoseMain.textContent = "البديل الآمن للحامل: قرص 5,000 وحدة يوم بعد يوم (أو 2,000 - 4,000 وحدة يومياً) لمدة 8 أسابيع.";
+                        phase1DoseSub.textContent = "تجنبي تناول أمبولات الـ 200,000 وحدة خلال فترة الحمل.";
+                    } else {
+                        const ampType = document.getElementById('ampType').value;
+                        const ampRoute = document.getElementById('ampRoute').value;
+                        const routeDesc = ampRoute === 'oral' ? "شرباً بالفم على نصف كوب حليب كامل الدسم" : "حقناً بالعضل العميق (IM)";
+                        if (labEval.status === 'deficiency') {
+                            phase1DoseMain.textContent = mult === 2
+                                ? `أمبولة واحدة (200,000 وحدة ${ampType}) كل أسبوعين لمدة 8 أسابيع (إجمالي 4 أمبولات) - ${routeDesc}.`
+                                : `أمبولة واحدة (200,000 وحدة ${ampType}) كل أسبوعين لمدة 6 أسابيع (إجمالي 3 أمبولات)، أو أمبولة شهرياً لمدة 3 أشهر - ${routeDesc}.`;
+                        } else {
+                            phase1DoseMain.textContent = `أمبولة واحدة (200,000 وحدة ${ampType}) مرة واحدة الآن، وتكرر بعد شهر واحد عند الحاجة - ${routeDesc}.`;
+                        }
+                        phase1DoseSub.textContent = ampRoute === 'oral' ? "تناول الأمبولة فموياً مع وجبة دهنية يعطي امتصاصاً ممتازاً ويتجنب ألم الحقن الزيتي." : "الحقن العضلي مثالي لمرضى سوء الامتصاص المِعوي أو بعد جراحات السمنة.";
+                    }
+                } else if (formulation === 'drops100' || formulation === 'drops400') {
+                    const conc = formulation === 'drops400' ? 400 : 100;
+                    phase1DoseMain.textContent = `${formatDrops(treatDailyIU, conc)} لمدة 8 أسابيع.`;
+                    phase1DoseSub.textContent = conc === 100
+                        ? `مناسب للكبار الذين يعانون من صعوبة البلع؛ ${(treatDailyIU/2800).toFixed(1)} مل بالقطارة يومياً (حيث 1 مل = 2800 وحدة).`
+                        : `باستخدام النقط المركزة (400 وحدة/نقطة) لتسهيل أخذ الجرعة بدون بلع كبسولات.`;
+                }
+            }
+
+            // المرحلة الثانية (الصيانة والوقاية) للبالغين وكبار السن
+            phase2TargetIU.textContent = `الهدف: ${maintDailyIU.toLocaleString()} - ${(2000 * mult).toLocaleString()} وحدة/يومياً`;
+
+            if (formulation === 'pill5k') {
+                phase2DoseMain.textContent = mult === 2
+                    ? "قرص واحد (5,000 وحدة) يوم بعد يوم (3 إلى 4 مرات أسبوعياً)."
+                    : "قرص واحد (5,000 وحدة) كل 3 أيام (مرتين أسبوعياً بانتظام).";
+                phase2DoseSub.textContent = "يوفر متوسط 1,500 إلى 2,000 وحدة يومياً للحفاظ على ثبات المخزون.";
+            } else if (formulation === 'pill10k') {
+                phase2DoseMain.textContent = mult === 2
+                    ? "قرص واحد (10,000 وحدة) مرتين أسبوعياً."
+                    : "قرص واحد فقط (10,000 وحدة) كل أسبوع (أو كل 5 أيام).";
+                phase2DoseSub.textContent = "جرعة صيانة مريحة جداً وتضمن التزام المريض على المدى الطويل.";
+            } else if (formulation === 'pill50k') {
+                phase2DoseMain.textContent = mult === 2
+                    ? "كبسولة (50,000 وحدة) كل أسبوعين (أو 3-4 أقراص 1,000 وحدة يومياً)."
+                    : "كبسولة واحدة (50,000 وحدة) كل 3 إلى 4 أسابيع (أو قرصين من تركيز 1,000 وحدة يومياً).";
+                phase2DoseSub.textContent = "يحافظ على مستوى 25(OH)D فوق 30 ng/mL طوال العام.";
+            } else if (formulation === 'amp200k') {
+                if (isPregnant) {
+                    phase2DoseMain.textContent = "البديل الآمن للحامل: 1,500 إلى 2,000 وحدة يومياً (أو قرص 5,000 وحدة مرتين أسبوعياً).";
+                    phase2DoseSub.textContent = "يُستمر عليها طوال فترة الحمل والرضاعة.";
+                } else {
+                    const ampType = document.getElementById('ampType').value;
+                    phase2DoseMain.textContent = mult === 2
+                        ? `أمبولة واحدة (200,000 وحدة ${ampType}) كل شهرين إلى 3 أشهر.`
+                        : `أمبولة واحدة (200,000 وحدة ${ampType}) كل 3 إلى 6 أشهر (غالباً كل 3 أشهر في الشتاء وكل 6 أشهر في الصيف).`;
+                    phase2DoseSub.textContent = "تؤخذ فموياً بعد وجبة دسمة أو بالحقن العضلي.";
+                }
+            } else if (formulation === 'drops100' || formulation === 'drops400') {
+                const conc = formulation === 'drops400' ? 400 : 100;
+                phase2DoseMain.textContent = `${formatDrops(maintDailyIU, conc)} بانتظام.`;
+                phase2DoseSub.textContent = "جرعة صيانة يومية مناسبة لمن يفضلون النقط السائلة.";
+            }
+
+            retestRec.textContent = needsTreatmentPhase
+                ? "يُوصى بإعادة تحليل 25(OH)D بعد 8 إلى 12 أسبوعاً من بدء البروتوكول العلاجي للتأكد من استقرار المستوى فوق 30 ng/mL قبل الاكتفاء بجرعة الصيانة."
+                : "لا حاجة لإعادة التحليل قريباً؛ يكفي الفحص الروتيني السنوي.";
+        }
+
+        // تشغيل المحاكي عند تحميل الصفحة
+        window.addEventListener('DOMContentLoaded', () => {
+            selectAgePreset('adult');
+        });
+    </script>
+</body>
+</html>
